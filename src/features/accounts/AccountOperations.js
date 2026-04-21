@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { deposit, payLoan, requestLoan, withdraw } from "../../redux-v1/accountSlice.v1";
+// import { deposit_v1, payLoan, requestLoan, withdraw } from "../../redux-v1/accountSlice.v1";
+import { deposit_v2, payLoan, requestLoan, withdraw } from "../../redux-v2-thunk/accountSlice.v2";
 
 function AccountOperations() {
     const [depositAmount, setDepositAmount] = useState("");
@@ -17,9 +18,12 @@ function AccountOperations() {
         isLoading,
     } = useSelector((store) => store.account);
 
+    console.log(balance);
+
     function handleDeposit() {
         if (!depositAmount) return;
-        dispatch(deposit(depositAmount));
+        // dispatch(deposit_v1(depositAmount));
+        dispatch(deposit_v2(depositAmount, currency));
         setDepositAmount("");
     }
 
