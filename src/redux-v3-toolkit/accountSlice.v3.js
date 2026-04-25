@@ -15,8 +15,13 @@ const accountSlice = createSlice({
             state.balance += action.payload;
             state.isLoading = false;
         },
-        withdraw(state, action) {
-            state.balance -= action.payload;
+        withdraw: {
+            prepare(amount) {
+                return { payload: amount };
+            },
+            reducer(state, action) {
+                state.balance -= action.payload;
+            },
         },
         requestLoan: {
             prepare(amount, purpose) {

@@ -1,12 +1,13 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
-export const deposit = createAsyncThunk("account/deposit", async function ({ amount, currency }) {
+// ✅ renamed to avoid collision
+export const depositAsync = createAsyncThunk("account/depositAsync", async function ({ amount, currency }) {
     if (currency === "USD") return amount;
 
     const res = await fetch(`https://api.frankfurter.app/latest?amount=${amount}&from=${currency}&to=USD`);
+
     const data = await res.json();
-    const converted = data.rates.USD;
-    return converted;
+    return data.rates.USD;
 });
 
 const initialState = {
@@ -22,45 +23,52 @@ const accountSlice = createSlice({
     reducers: {
         deposit(state, action) {
             state.balance += action.payload;
-            state.isLoading = false;
         },
+
         withdraw(state, action) {
             state.balance -= action.payload;
         },
+
         requestLoan: {
             prepare(amount, purpose) {
                 return {
                     payload: { amount, purpose },
                 };
             },
-
             reducer(state, action) {
                 if (state.loan > 0) return;
 
-                state.loan = action.payload.amount;
-                state.loanPurpose = action.payload.purpose;
-                state.balance = state.balance + action.payload.amount;
+                const { amount, purpose } = action.payload;
+
+                state.loan = amount;
+                state.loanPurpose = purpose;
+                state.balance += amount;
             },
         },
+
         payLoan(state) {
             state.balance -= state.loan;
             state.loan = 0;
             state.loanPurpose = "";
         },
     },
+
     extraReducers: (builder) => {
         builder
-            .addCase(deposit.pending, (state) => {
+            .addCase(depositAsync.pending, (state) => {
                 state.isLoading = true;
             })
-            .addCase(deposit.fulfilled, (state, action) => {
+            .addCase(depositAsync.fulfilled, (state, action) => {
                 state.balance += action.payload;
                 state.isLoading = false;
             })
-            .addCase(deposit.rejected, (state) => {
+            .addCase(depositAsync.rejected, (state) => {
                 state.isLoading = false;
             });
     },
 });
+
 export const accountReducer = accountSlice.reducer;
-export const { withdraw, requestLoan, payLoan } = accountSlice.actions;
+
+// ✅ export correct actions
+export const { deposit, withdraw, requestLoan, payLoan } = accountSlice.actions;
