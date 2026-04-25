@@ -1,13 +1,13 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
-// ✅ renamed to avoid collision
-export const depositAsync = createAsyncThunk("account/depositAsync", async function ({ amount, currency }) {
+const depositAsync = createAsyncThunk("account/depositAsync", async function ({ amount, currency }) {
     if (currency === "USD") return amount;
 
     const res = await fetch(`https://api.frankfurter.app/latest?amount=${amount}&from=${currency}&to=USD`);
 
     const data = await res.json();
-    return data.rates.USD;
+    const converted = data.rates.USD;
+    return converted;
 });
 
 const initialState = {
@@ -21,12 +21,23 @@ const accountSlice = createSlice({
     name: "account",
     initialState,
     reducers: {
-        deposit(state, action) {
-            state.balance += action.payload;
+        deposit: {
+            prepare(amount) {
+                return { payload: amount };
+            },
+            reducer(state, action) {
+                state.balance += action.payload;
+                state.isLoading = false;
+            },
         },
 
-        withdraw(state, action) {
-            state.balance -= action.payload;
+        withdraw: {
+            prepare(amount) {
+                return { payload: amount };
+            },
+            reducer(state, action) {
+                state.balance -= action.payload;
+            },
         },
 
         requestLoan: {
@@ -70,5 +81,6 @@ const accountSlice = createSlice({
 
 export const accountReducer = accountSlice.reducer;
 
-// ✅ export correct actions
-export const { deposit, withdraw, requestLoan, payLoan } = accountSlice.actions;
+const { deposit, withdraw, requestLoan, payLoan } = accountSlice.actions;
+
+export { deposit, depositAsync, withdraw, requestLoan, payLoan };
